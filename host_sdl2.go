@@ -2,6 +2,10 @@
 
 package nimble
 
+// typedef unsigned char Uint8;
+// void getSoundSamplesAdaptor(void *userdata, Uint8 *stream, int len);
+import "C"
+
 import (
 	"fmt"
 	"github.com/veandco/go-sdl2/sdl"
@@ -37,13 +41,12 @@ func Time() float64 {
 }
 
 // Creates a slice of Pixel from a raw pointer
-func sliceFromPixelPtr(data unsafe.Pointer, length int) []Pixel {
-	var pixels []Pixel
+func sliceFromPixelPtr(data unsafe.Pointer, length int) (pixels []Pixel) {
 	sliceHeader := (*reflect.SliceHeader)(unsafe.Pointer(&pixels))
 	sliceHeader.Cap = int(length)
 	sliceHeader.Len = int(length)
 	sliceHeader.Data = uintptr(data)
-	return pixels
+	return
 }
 
 func lockTexture(tex *sdl.Texture, width int, height int) (pixels []Pixel, pitch int) {
@@ -62,6 +65,23 @@ func lockTexture(tex *sdl.Texture, width int, height int) (pixels []Pixel, pitch
 var winTitle string = "FIXME"
 var winWidth, winHeight int = 800, 600
 
+func sliceFromAudioStream(data unsafe.Pointer, length int) (samples []float32) {
+	sliceHeader := (*reflect.SliceHeader)(unsafe.Pointer(&samples))
+	sliceHeader.Cap = int(length)
+	sliceHeader.Len = int(length)
+	sliceHeader.Data = uintptr(data)
+	return
+}
+
+//export getSoundSamplesAdaptor
+func getSoundSamplesAdaptor(userdata unsafe.Pointer, stream *C.Uint8, length C.int) {
+	buf := sliceFromAudioStream(unsafe.Pointer(stream), int(length)/4)
+	for i := range buf {
+		buf[i] = 0
+	}
+	getSoundSamples(buf)
+}
+
 func Run() int {
 	// All SDL calls must come from same thread.
 	runtime.LockOSThread()
@@ -72,6 +92,24 @@ func Run() int {
 		panic(err)
 	}
 	defer sdl.Quit()
+
+	// Install audio callback
+	spec := &sdl.AudioSpec{
+		Freq:     SampleRate,
+		Format:   sdl.AUDIO_F32SYS,
+		Channels: 1,
+		Samples:  4096,
+		Callback: sdl.AudioCallback(C.getSoundSamplesAdaptor),
+	}
+	audioDevice, err := sdl.OpenAudioDevice("", false, spec, nil, 0)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to open audio device: %v\n", err)
+		panic(err)
+	}
+	if audioDevice < 2 {
+		fmt.Fprintf(os.Stderr, "Audio device=%v < 2 contrary to SDL-2 documentation\n", audioDevice, err)
+	}
+	sdl.PauseAudioDevice(audioDevice, false)
 
 	// Create window
 	window, err := sdl.CreateWindow(winTitle, sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
