@@ -7,14 +7,30 @@ import (
 
 const Pi = math.Pi
 
-// RoundToInt rounds a 32-bit float to the nearest int and returns it.
-// If the rounded value does not fit in an int, the result is undefined.
-func RoundToInt(x float32) int {
-	return int(math.Floor(float64(x) + 0.5))
+func Atan2(y float32, x float32) float32 {
+	return float32(math.Atan2(float64(y), float64(x)))
+}
+
+func Abs(x float32) float32 {
+	if x < 0 {
+		return -x
+	}
+	if x == 0 {
+		return 0 // Deals with negative zero case
+	}
+	return x
 }
 
 func Cos(x float32) float32 {
 	return float32(math.Cos(float64(x)))
+}
+
+func Hypot(x float32, y float32) float32 {
+	// Using 64-bit arithmetic avoids overflow/underflow without
+	// the complications of the approach in math.Hypot.
+	x64 := float64(x)
+	y64 := float64(y)
+	return float32(math.Sqrt(x64*x64 + y64*y64))
 }
 
 func Sin(x float32) float32 {
@@ -32,26 +48,11 @@ func Sqrt(x float32) float32 {
 	return float32(math.Sqrt(float64(x)))
 }
 
-func Hypot(x float32, y float32) float32 {
-	// Using 64-bit arithmetic avoids overflow/underflow without
-	// the complications of the approach in math.Hypot.
-	x64 := float64(x)
-	y64 := float64(y)
-	return float32(math.Sqrt(x64*x64 + y64*y64))
-}
-
-func Atan2(y float32, x float32) float32 {
-	return float32(math.Atan2(float64(y), float64(x)))
-}
-
-func Abs(x float32) float32 {
-	if x < 0 {
-		return -x
-	}
-	if x == 0 {
-		return 0 // Deals with negative zero case
-	}
-	return x
+func Trunc(x float32) float32 {
+    if -(1<<24)<=x && x<=1<<24 {
+        return float32(int32(x))
+    }
+    return x
 }
 
 func Max(a, b float32) float32 {
