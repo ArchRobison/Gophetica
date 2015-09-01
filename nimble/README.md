@@ -1,7 +1,7 @@
-# NimbleDraw
+# Nimble
 Go package for simple 2D video games.
 
-Package NimbleDraw is a Go incarnation of a lightweight graphics interface 
+Package `nimble` is a Go incarnation of a lightweight graphics interface 
 that I use for video games.  The games typically involve unusual rendering 
 not handled by hardware accelerators.  Hence the interface focuses on providing 
 simple efficient access to bitmaps in memory.

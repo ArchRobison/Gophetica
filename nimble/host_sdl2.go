@@ -36,7 +36,7 @@ func MouseWhere() (x, y int32) {
 }
 
 // Get time in seconds.  Time zero is platform specific.
-func Time() float64 {
+func Now() float64 {
 	return float64(sdl.GetTicks()) * 0.001
 }
 
