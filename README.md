@@ -1,11 +1,12 @@
-# NimbleDraw
-Go package for simple 2D video games.
+# Gophetica
 
-Package NimbleDraw is a Go incarnation of a lightweight graphics interface 
-that I use for video games.  The games typically involve unusual rendering 
-not handled by hardware accelerators.  Hence the interface focuses on providing 
-simple efficient access to bitmaps in memory.
+This is a collection of Go packages that I am using for my Go port 
+of Frequon Invaders and might be of independent interest.
 
-The other purpose of the package is be a thin wrapper that can be wrapped 
-around a variety of host platforms.  The initial port is against 
-[go-sdl2](https://github.com/veandco/go-sdl2).
+* `nimble`: lightweight graphics interface for video games.
+* `math32`: 32-bit analog of Go math package
+* `cmplx64`: 64-bit analog of Go cmplex package
+
+The libraries have only the functionality that I need so far.
+The two math packages need many more functions to fully match
+their analogs.  Feel free to send pull requests to enhance them.
