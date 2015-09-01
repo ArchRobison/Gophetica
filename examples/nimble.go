@@ -2,7 +2,7 @@ package main
 
 import (
 	"math"
-    nimble "github.com/ArchRobison/NimbleDraw"
+    "github.com/ArchRobison/Gophetica/nimble"
 )
 
 type Banana struct {
