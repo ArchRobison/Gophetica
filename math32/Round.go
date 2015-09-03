@@ -2,18 +2,29 @@ package math32
 
 // Round 32-bit float to the nearest integer value, rounding to even in case of a tie.
 // Sadly there is no analogue of this function in the Go math library.
-func Round(x float32) float32 {
-	if -(1<<24)<x && x<1<<24 {
-        i := int32(float64(x)+0.5)
-		z := float32(i)
-		if z-x==0.5 && i&1!=0 {
-			// Rounded .5 up to odd
-			return z-1
-		}
-		return z
-	} else {
-		// Only integer bits fit
+func Round(x float32) float32 
+
+func round(x float32) float32 {
+    const m = 1<<23
+    var d float32 
+	if x==0 {
 	    return x
+    } else if x>0 {
+	    if x>=m {
+			return x
+		} 
+		d = 0.5
+	} else if x<0 {
+	    if x<=-m {
+			return x
+		}
+		d = -0.5
 	}
+	i := int32(x + d)
+	z := float32(i)
+	if z-x == d && i&1 != 0 {
+	    // Rounded .5 to even
+		return x - d
+	}
+	return z
 }
- 

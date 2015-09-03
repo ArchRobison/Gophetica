@@ -25,12 +25,36 @@ func Cos(x float32) float32 {
 	return float32(math.Cos(float64(x)))
 }
 
+func Exp(x float32) float32 {
+	return float32(math.Exp(float64(x)))
+}
+
 func Hypot(x float32, y float32) float32 {
 	// Using 64-bit arithmetic avoids overflow/underflow without
 	// the complications of the approach in math.Hypot.
 	x64 := float64(x)
 	y64 := float64(y)
 	return float32(math.Sqrt(x64*x64 + y64*y64))
+}
+
+func Max(a, b float32) float32 {
+	if a < b {
+		return b
+	} else {
+		return a
+	}
+}
+
+func Min(a, b float32) float32 {
+	if a < b {
+		return a
+	} else {
+		return b
+	}
+}
+
+func Signbit(x float32) bool {
+	return math.Signbit(float64(x))
 }
 
 func Sin(x float32) float32 {
@@ -49,24 +73,8 @@ func Sqrt(x float32) float32 {
 }
 
 func Trunc(x float32) float32 {
-    if -(1<<24)<=x && x<=1<<24 {
-        return float32(int32(x))
-    }
-    return x
-}
-
-func Max(a, b float32) float32 {
-	if a < b {
-		return b
-	} else {
-		return a
+	if -(1<<24) <= x && x <= 1<<24 {
+		return float32(int32(x))
 	}
-}
-
-func Min(a, b float32) float32 {
-	if a < b {
-		return a
-	} else {
-		return b
-	}
+	return x
 }
