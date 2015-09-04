@@ -18,8 +18,6 @@ func TestRound(t *testing.T) {
 		fval = append(fval, x, math.Nextafter32(x, 1), math.Nextafter32(x, -1))
 		x /= 2
 	}
-	z := float32(0)
-    assert(Signbit(Round(-z))==true, "Signbit/Round", t)
 	for _, i := range ival {
 		for _, f := range fval {
 			x := i + f
@@ -28,6 +26,7 @@ func TestRound(t *testing.T) {
 			assert(d <= 0.5, "Round/Abs", t)
 			assert(d < 0.5 || int(y)&1 == 0, "Round/Abs", t)
 			assert(Round(-x) == -Round(x), "Round", t)
+			assert(Signbit(Round(-x)) == !Signbit(y), "Signbit/Round", t)
 		}
 	}
 }

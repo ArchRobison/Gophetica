@@ -1,7 +1,6 @@
 package math32
 
 import (
-	"math"
 	"testing"
 )
 
@@ -15,9 +14,9 @@ func assert(expr bool, msg string, t *testing.T) {
 func TestMath32(t *testing.T) {
 	// The testing strategy is to check axioms.
 	val := []float32{0.0, 0.25, 1.0, 2.25}
-    for i:=range val {
-	    val = append(val,-val[i])
-    } 
+	for i := range val {
+		val = append(val, -val[i])
+	}
 	for _, x := range val {
 		assert(Signbit(x) == !Signbit(-x), "Signbit", t)
 		assert(Signbit(x) == Signbit(1/x), "Signbit", t)
@@ -46,28 +45,4 @@ func TestMath32(t *testing.T) {
 		}
 	}
 	assert(Exp(1) == 2.7182818284, "Exp(1)", t) // Check that Expr is using correct base
-}
-
-func TestTrunc(t *testing.T) {
-	ival := []float32{}
-	x := float32(1)
-	for !math.IsInf(float64(x), 1) {
-		ival = append(ival, x)
-		x *= 2
-	}
-	fval := []float32{}
-	x = math.Nextafter32(1, -1)
-	for x != 0 {
-		fval = append(fval, x)
-		x = 1 - (1-x)*2
-	}
-	for _, i := range ival {
-		for _, f := range fval {
-			x := i + f
-			y := Trunc(x)
-			assert(y == i || x-i == 1, "Trunc", t)
-			z := Trunc(-x)
-			assert(z == -y, "Trunc", t)
-		}
-	}
 }

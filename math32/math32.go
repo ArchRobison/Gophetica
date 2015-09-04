@@ -71,10 +71,3 @@ func Sincos(θ float32) (sin, cos float32) {
 func Sqrt(x float32) float32 {
 	return float32(math.Sqrt(float64(x)))
 }
-
-func Trunc(x float32) float32 {
-	if -(1<<24) <= x && x <= 1<<24 {
-		return float32(int32(x))
-	}
-	return x
-}
