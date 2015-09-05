@@ -26,28 +26,34 @@ func MakePixMap(width, height int32, pixels []Pixel, vstride int32) (pm PixMap) 
 	return
 }
 
+// Width returns the width of the PixMap
 func (pm *PixMap) Width() int32 {
 	return pm.width
 }
 
+// Height returns the height of the PixMap
 func (pm *PixMap) Height() int32 {
 	return pm.height
 }
 
+// Size returns the width and height of the PixMap
 func (pm *PixMap) Size() (w, h int32) {
 	w = pm.width
 	h = pm.height
 	return
 }
 
+// Empty is true if the PixMap has zero pixels
 func (pm *PixMap) Empty() bool {
 	return pm.width <= 0 || pm.height <= 0
 }
 
+// Contains returns true iff the PixMap contains pointer (x,y)
 func (pm *PixMap) Contains(x, y int32) bool {
 	return uint32(x) < uint32(pm.width) && uint32(y) < uint32(pm.height)
 }
 
+// Intersect returns a PixMap referencing the pixels in the intersection of a PixMap and a Rect
 func (pm *PixMap) Intersect(r Rect) (result PixMap) {
 	x0, y0, x1, y1 := pm.clip(r)
 	if x0 > x1 || y0 > y1 {
