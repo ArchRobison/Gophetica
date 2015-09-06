@@ -26,3 +26,6 @@ func Gray(frac float32) Pixel {
 	g := component(frac)
 	return g<<redShift | g<<greenShift | g<<blueShift | 0xFF<<alphaShift
 }
+
+const Black = Pixel(0xFF000000)
+const White = Pixel(0xFFFFFFFF)
