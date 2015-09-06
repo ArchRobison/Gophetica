@@ -26,6 +26,28 @@ func AddRenderClient(r renderClient) {
 	renderClientList = append(renderClientList, r)
 }
 
+type keyClient interface {
+	KeyDown(Key)
+}
+
+var keyClientList []keyClient
+
+func AddKeyClient(k keyClient) {
+	keyClientList = append(keyClientList, k)
+}
+
+var keyMap = map[sdl.Keycode]Key{
+	sdl.K_RETURN:    KeyReturn,
+	sdl.K_ESCAPE:    KeyEscape,
+	sdl.K_LEFT:      KeyLeft,
+	sdl.K_RIGHT:     KeyRight,
+	sdl.K_UP:        KeyUp,
+	sdl.K_DOWN:      KeyDown,
+	sdl.K_DELETE:    KeyDelete,
+	sdl.K_BACKSPACE: KeyBackspace,
+	sdl.K_TAB:       KeyTab,
+}
+
 var mouseX, mouseY int32
 
 // Get position of mouse
@@ -143,14 +165,26 @@ func Run() int {
 
 	for {
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
-			switch t := event.(type) {
+			switch e := event.(type) {
 			case *sdl.QuitEvent:
 				return 0
 			case *sdl.MouseMotionEvent:
-				mouseX = int32(t.X)
-				mouseY = int32(t.Y)
-			case *sdl.KeyUpEvent:
-				return 0
+				mouseX = int32(e.X)
+				mouseY = int32(e.Y)
+			case *sdl.KeyDownEvent:
+				var k Key
+				if 0x20 <= e.Keysym.Sym && e.Keysym.Sym < 0x7F {
+					// Printable ASCII
+					k = Key(e.Keysym.Sym)
+				} else {
+					// Try special character table
+					k = keyMap[e.Keysym.Sym]
+				}
+				if k != 0 {
+					for _, c := range keyClientList {
+						c.KeyDown(k)
+					}
+				}
 			}
 		}
 
@@ -173,4 +207,9 @@ func Run() int {
 		}
 		renderer.Present()
 	}
+}
+
+// Causes Run() to return after processing any pending events.
+func Quit() {
+	sdl.PushEvent(&sdl.QuitEvent{Type: sdl.QUIT})
 }
