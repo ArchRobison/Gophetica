@@ -14,3 +14,19 @@ const (
 	KeyUp
 	KeyDown
 )
+
+type keyObserver interface {
+	KeyDown(Key)
+}
+
+var keyObserverList []keyObserver
+
+func AddKeyObserver(k keyObserver) {
+	keyObserverList = append(keyObserverList, k)
+}
+
+func forwardKeyEvent(k Key) {
+	for _, c := range keyObserverList {
+		c.KeyDown(k)
+	}
+}

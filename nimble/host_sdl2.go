@@ -1,4 +1,5 @@
-// Plaform-dependent routines
+// Plaform-dependent routines of nimble.
+// This file implements them using SDL 2.
 
 package nimble
 
@@ -9,6 +10,7 @@ import "C"
 import (
 	"fmt"
 	"github.com/veandco/go-sdl2/sdl"
+	"github.com/veandco/go-sdl2/sdl_ttf"
 	"os"
 	"reflect"
 	"runtime"
@@ -26,16 +28,6 @@ func AddRenderClient(r renderClient) {
 	renderClientList = append(renderClientList, r)
 }
 
-type keyClient interface {
-	KeyDown(Key)
-}
-
-var keyClientList []keyClient
-
-func AddKeyClient(k keyClient) {
-	keyClientList = append(keyClientList, k)
-}
-
 var keyMap = map[sdl.Keycode]Key{
 	sdl.K_RETURN:    KeyReturn,
 	sdl.K_ESCAPE:    KeyEscape,
@@ -46,15 +38,6 @@ var keyMap = map[sdl.Keycode]Key{
 	sdl.K_DELETE:    KeyDelete,
 	sdl.K_BACKSPACE: KeyBackspace,
 	sdl.K_TAB:       KeyTab,
-}
-
-var mouseX, mouseY int32
-
-// Get position of mouse
-func MouseWhere() (x, y int32) {
-	x = int32(mouseX)
-	y = int32(mouseY)
-	return
 }
 
 // Get time in seconds.  Time zero is platform specific.
@@ -169,8 +152,19 @@ func Run() int {
 			case *sdl.QuitEvent:
 				return 0
 			case *sdl.MouseMotionEvent:
-				mouseX = int32(e.X)
-				mouseY = int32(e.Y)
+				// Go equivalent of SDL_PRESSED seems to be missing, so compare with zero.
+				if e.State != 0 {
+					forwardMouseEvent(MouseDrag, int32(e.X), int32(e.Y))
+				} else {
+					forwardMouseEvent(MouseMove, int32(e.X), int32(e.Y))
+				}
+			case *sdl.MouseButtonEvent:
+				switch e.Type {
+				case sdl.MOUSEBUTTONDOWN:
+					forwardMouseEvent(MouseDown, int32(e.X), int32(e.Y))
+				case sdl.MOUSEBUTTONUP:
+					forwardMouseEvent(MouseUp, int32(e.X), int32(e.Y))
+				}
 			case *sdl.KeyDownEvent:
 				var k Key
 				if 0x20 <= e.Keysym.Sym && e.Keysym.Sym < 0x7F {
@@ -181,9 +175,7 @@ func Run() int {
 					k = keyMap[e.Keysym.Sym]
 				}
 				if k != 0 {
-					for _, c := range keyClientList {
-						c.KeyDown(k)
-					}
+					forwardKeyEvent(k)
 				}
 			}
 		}
@@ -212,4 +204,60 @@ func Run() int {
 // Causes Run() to return after processing any pending events.
 func Quit() {
 	sdl.PushEvent(&sdl.QuitEvent{Type: sdl.QUIT})
+}
+
+type Font ttf.Font
+
+func OpenFont(filename string, size int) (*Font, error) {
+	if !ttf.WasInit() {
+		ttf.Init()
+	}
+	f, err := ttf.OpenFont(filename, size)
+	return (*Font)(f), err
+}
+
+func (f *Font) Close() {
+	f.Close()
+}
+
+func (pm *PixMap) DrawText(x, y int32, text string, color Pixel, font *Font) (width, height int32) {
+	c := sdl.Color{R: uint8(color >> redShift),
+		G: uint8(color >> greenShift),
+		B: uint8(color >> blueShift),
+		A: uint8(color >> alphaShift)}
+	tmp, err := (*ttf.Font)(font).RenderUTF8_Solid(text, c)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "RenderUTF8_Solid: %v", err)
+		panic(err)
+	}
+	defer tmp.Free()
+	width, height = tmp.W, tmp.H
+	sliceHeader := (*reflect.SliceHeader)(unsafe.Pointer(&pm.buf))
+	dst, err := sdl.CreateRGBSurfaceFrom(unsafe.Pointer(sliceHeader.Data),
+		int(pm.width), int(pm.height), 32, int(pm.vstride*4),
+		0xFF<<redShift, 0xFF<<greenShift, 0xFF<<blueShift, 0xFF<<alphaShift)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "CreateRGBSurfaceFrom: %v", err)
+		panic(err)
+	}
+	defer dst.Free()
+	err = tmp.Blit(nil, dst, &sdl.Rect{X: x, Y: y, W: tmp.W, H: tmp.H})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Blit: %v\n", err)
+		panic(err)
+	}
+	return
+}
+
+func (f *Font) Height() int32 {
+    return int32((*ttf.Font)(f).Height())
+}
+ 
+func (f *Font) Size(text string) (width, height int32) {
+	w, h, err := (*ttf.Font)(f).SizeUTF8(text)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "SizeUTF8: %v\n", err)
+		panic(err)
+	}
+	return int32(w), int32(h)
 }
