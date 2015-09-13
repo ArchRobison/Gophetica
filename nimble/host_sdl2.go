@@ -221,6 +221,9 @@ func (f *Font) Close() {
 }
 
 func (pm *PixMap) DrawText(x, y int32, text string, color Pixel, font *Font) (width, height int32) {
+	if text == "" {
+		return 0, font.Height()
+	}
 	c := sdl.Color{R: uint8(color >> redShift),
 		G: uint8(color >> greenShift),
 		B: uint8(color >> blueShift),
@@ -250,9 +253,9 @@ func (pm *PixMap) DrawText(x, y int32, text string, color Pixel, font *Font) (wi
 }
 
 func (f *Font) Height() int32 {
-    return int32((*ttf.Font)(f).Height())
+	return int32((*ttf.Font)(f).Height())
 }
- 
+
 func (f *Font) Size(text string) (width, height int32) {
 	w, h, err := (*ttf.Font)(f).SizeUTF8(text)
 	if err != nil {
