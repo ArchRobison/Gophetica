@@ -1,3 +1,3 @@
 package nimble
 
-const debugMode = true
+const debugMode = false
