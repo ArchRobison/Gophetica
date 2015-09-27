@@ -67,8 +67,8 @@ func lockTexture(tex *sdl.Texture, width int, height int) (pixels []Pixel, pitch
 	return
 }
 
-var winTitle string = "FIXME"
-var winWidth, winHeight int = 800, 600
+var winTitle string = ""
+var winWidth, winHeight int = 1024, 768
 
 func sliceFromAudioStream(data unsafe.Pointer, length int) (samples []float32) {
 	sliceHeader := (*reflect.SliceHeader)(unsafe.Pointer(&samples))
@@ -85,6 +85,11 @@ func getSoundSamplesAdaptor(userdata unsafe.Pointer, stream *C.Uint8, length C.i
 		buf[i] = 0
 	}
 	getSoundSamples(buf)
+}
+
+// Set title of Window. Must be called before Run() to have useful effect.
+func SetWindowTitle(title string) {
+	winTitle = title
 }
 
 func Run() int {
