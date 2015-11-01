@@ -50,6 +50,16 @@ func (*context) KeyDown(k Key) {
 	}
 }
 
+type winContext struct{}
+
+func (*winContext) Size() (width, height int32) {
+	return 1024, 768
+}
+
+func (*winContext) Title() string {
+	return "Test"
+}
+
 func TestMouse(t *testing.T) {
 	var err error
 	const fontfile = "Roboto-Regular.ttf"
@@ -61,5 +71,7 @@ func TestMouse(t *testing.T) {
 	AddKeyObserver(&context{})
 	AddMouseObserver(&context{})
 	fmt.Printf("Mouse mouse around and click left button. Press Esc to quit.\n")
-	Run()
+	var ctx winContext
+	Run(&ctx) // Partiel screen test
+	Run(nil)  // Full screen test
 }

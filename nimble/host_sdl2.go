@@ -17,17 +17,6 @@ import (
 	"unsafe"
 )
 
-type renderClient interface {
-	Init(width, height int32) // Inform client of window size
-	Render(pm PixMap)
-}
-
-var renderClientList []renderClient
-
-func AddRenderClient(r renderClient) {
-	renderClientList = append(renderClientList, r)
-}
-
 var keyMap = map[sdl.Keycode]Key{
 	sdl.K_RETURN:    KeyReturn,
 	sdl.K_ESCAPE:    KeyEscape,
@@ -84,27 +73,8 @@ func getSoundSamplesAdaptor(userdata unsafe.Pointer, stream *C.Uint8, length C.i
 	getSoundSamples(buf)
 }
 
-var winTitle string = ""
-
-// SetWindowTitle sets the title of a Window.
-// Call it before Run() to have useful effect.
-func SetWindowTitle(title string) {
-	winTitle = title
-}
-
-var winWidth, winHeight int = 1024, 768
-
-// SetWindowSize sets size of Window.
-// Call it before Run() to have useful effect.
-func SetWindowSize(width, height int32) {
-	if width < 0 || height < 0 {
-		panic(fmt.Sprintf("nimble.SetWindowSize: bad size = (%v,%v)\n", width, height))
-	}
-	winWidth = int(width)
-	winHeight = int(height)
-}
-
-func Run() int {
+// win==nil requests a full-screen window
+func Run(win WindowSpec) int {
 	// All SDL calls must come from same thread.
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
@@ -134,8 +104,17 @@ func Run() int {
 	sdl.PauseAudioDevice(audioDevice, false)
 
 	// Create window
-	window, err := sdl.CreateWindow(winTitle, sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
-		winWidth, winHeight, sdl.WINDOW_SHOWN)
+	var window *sdl.Window
+	if win != nil {
+		// Partial screen
+		winWidth, winHeight := win.Size()
+		window, err = sdl.CreateWindow(win.Title(), sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
+			int(winWidth), int(winHeight), sdl.WINDOW_SHOWN)
+	} else {
+		// Full screen
+		window, err = sdl.CreateWindow("", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
+			0, 0, sdl.WINDOW_SHOWN|sdl.WINDOW_FULLSCREEN_DESKTOP)
+	}
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to create window: %v\n", err)
 		panic(err)
@@ -163,6 +142,7 @@ func Run() int {
 		r.Init(int32(width), int32(height))
 	}
 
+	// Loop until quit
 	for {
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 			switch e := event.(type) {
