@@ -67,9 +67,6 @@ func lockTexture(tex *sdl.Texture, width int, height int) (pixels []Pixel, pitch
 	return
 }
 
-var winTitle string = ""
-var winWidth, winHeight int = 1024, 768
-
 func sliceFromAudioStream(data unsafe.Pointer, length int) (samples []float32) {
 	sliceHeader := (*reflect.SliceHeader)(unsafe.Pointer(&samples))
 	sliceHeader.Cap = int(length)
@@ -87,9 +84,24 @@ func getSoundSamplesAdaptor(userdata unsafe.Pointer, stream *C.Uint8, length C.i
 	getSoundSamples(buf)
 }
 
-// Set title of Window. Must be called before Run() to have useful effect.
+var winTitle string = ""
+
+// SetWindowTitle sets the title of a Window.
+// Call it before Run() to have useful effect.
 func SetWindowTitle(title string) {
 	winTitle = title
+}
+
+var winWidth, winHeight int = 1024, 768
+
+// SetWindowSize sets size of Window.
+// Call it before Run() to have useful effect.
+func SetWindowSize(width, height int32) {
+	if width < 0 || height < 0 {
+		panic(fmt.Sprintf("nimble.SetWindowSize: bad size = (%v,%v)\n", width, height))
+	}
+	winWidth = int(width)
+	winHeight = int(height)
 }
 
 func Run() int {
