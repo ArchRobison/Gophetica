@@ -203,6 +203,15 @@ func Quit() {
 	sdl.PushEvent(&sdl.QuitEvent{Type: sdl.QUIT})
 }
 
+// Show or hide cursor
+func ShowCursor(show bool) {
+	if show {
+		sdl.ShowCursor(1)
+	} else {
+		sdl.ShowCursor(0)
+	}
+}
+
 type Font ttf.Font
 
 func OpenFont(filename string, size int) (*Font, error) {

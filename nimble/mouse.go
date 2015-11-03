@@ -19,7 +19,7 @@ var (
 	mouseX, mouseY int32
 )
 
-// Get state mouse
+// Get state of mouse
 func MouseState() (x, y int32, isDown bool) {
 	x = int32(mouseX)
 	y = int32(mouseY)

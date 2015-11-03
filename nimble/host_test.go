@@ -47,6 +47,10 @@ func (*context) KeyDown(k Key) {
 	switch k {
 	case KeyEscape:
 		Quit()
+	case 's':
+		ShowCursor(true) // show cursor
+	case 'h':
+		ShowCursor(false) // hide cursor
 	}
 }
 
