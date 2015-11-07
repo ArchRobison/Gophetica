@@ -14,7 +14,7 @@ func PlaySound(waveform []float32, relativeAmplitude, relativePitch float32) {
 	}:
 	default:
 		// Channel full, so drop sound.
-		if debugMode {
+		if devConfig {
 			fmt.Printf("PlaySound: channel full\n")
 		}
 	}

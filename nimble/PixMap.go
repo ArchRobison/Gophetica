@@ -13,7 +13,7 @@ type PixMap struct {
 
 // Make PixMap using provided buffer
 func MakePixMap(width, height int32, pixels []Pixel, vstride int32) (pm PixMap) {
-	if debugMode {
+	if devConfig {
 		const limit = 16384
 		if uint32(width) > limit || uint32(height) >= limit || vstride < width || int64(height)*int64(vstride) > int64(len(pixels)) {
 			panic(fmt.Sprintf("MakePixMap: width=%v height=%v len(pixels)=%v vstride=%v\n", width, height, len(pixels), vstride))
@@ -104,7 +104,7 @@ func (dst *PixMap) Copy(x0, y0 int32, src *PixMap) {
 }
 
 func (pm *PixMap) index(x, y int32) int32 {
-	if debugMode {
+	if devConfig {
 		if uint32(x) >= uint32(pm.width) || uint32(y) >= uint32(pm.height) {
 			panic(fmt.Sprintf("index: x=%v y=%v width=%v height=%v\n", x, y, pm.width, pm.height))
 		}

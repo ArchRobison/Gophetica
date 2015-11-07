@@ -9,3 +9,5 @@ simple efficient access to bitmaps in memory.
 The other purpose of the package is be a thin wrapper that can be wrapped 
 around a variety of host platforms.  The initial port is against 
 [go-sdl2](https://github.com/veandco/go-sdl2).
+
+When used for production, it should be built with `-tags=release`.
