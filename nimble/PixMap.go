@@ -4,16 +4,18 @@ import (
 	"fmt"
 )
 
+// A PixMap is a reference to a 2D array or subarray of pixels.
 type PixMap struct {
-	buf     []Pixel
-	vstride int32
-	width   int32
-	height  int32
+	buf     []Pixel // underlying array of pixels.  [0] is pixel at (0,0).
+	vstride int32   // stride between vertically adjacent pixels.  [vstride] is pixel at (0,1).
+	width   int32   // width of the array in pixels
+	height  int32   // height of array in pixels
 }
 
-// Make PixMap using provided buffer
+// MakePixMap makes a PixMap using provided buffer.
 func MakePixMap(width, height int32, pixels []Pixel, vstride int32) (pm PixMap) {
 	if devConfig {
+		// limit is a sanity check limit.  Though a PixMap could conceivably be bigger, it's more likely a sign of a programmer error.
 		const limit = 16384
 		if uint32(width) > limit || uint32(height) >= limit || vstride < width || int64(height)*int64(vstride) > int64(len(pixels)) {
 			panic(fmt.Sprintf("MakePixMap: width=%v height=%v len(pixels)=%v vstride=%v\n", width, height, len(pixels), vstride))
@@ -26,12 +28,12 @@ func MakePixMap(width, height int32, pixels []Pixel, vstride int32) (pm PixMap) 
 	return
 }
 
-// Width returns the width of the PixMap
+// Width returns the width of the PixMap.
 func (pm *PixMap) Width() int32 {
 	return pm.width
 }
 
-// Height returns the height of the PixMap
+// Height returns the height of the PixMap.
 func (pm *PixMap) Height() int32 {
 	return pm.height
 }
@@ -43,17 +45,17 @@ func (pm *PixMap) Size() (w, h int32) {
 	return
 }
 
-// Empty is true if the PixMap has zero pixels
+// Empty is true if the PixMap has zero pixels.
 func (pm *PixMap) Empty() bool {
 	return pm.width <= 0 || pm.height <= 0
 }
 
-// Contains returns true iff the PixMap contains pointer (x,y)
+// Contains returns true iff the PixMap contains pointer (x,y).
 func (pm *PixMap) Contains(x, y int32) bool {
 	return uint32(x) < uint32(pm.width) && uint32(y) < uint32(pm.height)
 }
 
-// Intersect returns a PixMap referencing the pixels in the intersection of a PixMap and a Rect
+// Intersect returns a PixMap referencing the pixels in the intersection of a PixMap and a Rect.
 func (pm *PixMap) Intersect(r Rect) (result PixMap) {
 	x0, y0, x1, y1 := pm.clip(r)
 	if x0 > x1 || y0 > y1 {
@@ -68,11 +70,16 @@ func (pm *PixMap) Intersect(r Rect) (result PixMap) {
 }
 
 // Row returns a slice referring to the pixels with the given y coordinate.
+// For example:
+//     pm.Row(y)[x]
+// refers to the same pixel as:
+//	   pm.Pixel(x,y)
 func (pm *PixMap) Row(y int32) []Pixel {
 	i := y * pm.vstride
 	return pm.buf[i : i+pm.width]
 }
 
+// Pixel returns the pixel at (x,y)
 func (pm *PixMap) Pixel(x int32, y int32) Pixel {
 	return pm.buf[pm.index(x, y)]
 }
@@ -82,18 +89,21 @@ func (pm *PixMap) SetPixel(x, y int32, p Pixel) {
 	pm.buf[pm.index(x, y)] = p
 }
 
-func (pm *PixMap) DrawRect(r Rect, p Pixel) {
+// DrawRect draws a rectangle with the given color.
+func (pm *PixMap) DrawRect(r Rect, color Pixel) {
 	x0, y0, x1, y1 := pm.clip(r)
 	if x1 <= x0 || y1 <= y0 {
 		return
 	}
-	pm.rawDrawRect(x0, y0, x1, y1, p)
+	pm.rawDrawRect(x0, y0, x1, y1, color)
 }
 
-func (pm *PixMap) Fill(p Pixel) {
-	pm.rawDrawRect(0, 0, pm.width, pm.height, p)
+// Fill fills the PixMap with the given color.
+func (pm *PixMap) Fill(color Pixel) {
+	pm.rawDrawRect(0, 0, pm.width, pm.height, color)
 }
 
+// Copy copies PixMap src to dst, mapping (0,0) of src onto (x0,y0) of dst.
 func (dst *PixMap) Copy(x0, y0 int32, src *PixMap) {
 	// FIXME - add clipping support
 	for y := int32(0); y < src.Height(); y++ {
