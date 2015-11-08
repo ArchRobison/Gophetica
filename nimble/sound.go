@@ -2,8 +2,10 @@ package nimble
 
 import "fmt"
 
+// Nominal sample rate for waveforms.
 const SampleRate = 44100.0
 
+// Play a sound using the given waveform samples.
 func PlaySound(waveform []float32, relativeAmplitude, relativePitch float32) {
 	select {
 	case newPlayers <- player{

@@ -2,6 +2,7 @@ package nimble
 
 type MouseEvent uint8
 
+// Kinds of mouse events.
 const (
 	MouseMove = MouseEvent(iota) // Mouse moved with button up
 	MouseDown                    // Button pressed
@@ -9,17 +10,18 @@ const (
 	MouseDrag                    // Mouse moved with button down
 )
 
-type mouseObserver interface {
+// A MouseObserver observes mousse events.
+type MouseObserver interface {
 	ObserveMouse(event MouseEvent, x, y int32)
 }
 
-// Current state of mouse
+// Current state of mouse.
 var (
 	mouseIsDown    bool
 	mouseX, mouseY int32
 )
 
-// Get state of mouse
+// Get state of mouse.
 func MouseState() (x, y int32, isDown bool) {
 	x = int32(mouseX)
 	y = int32(mouseY)
@@ -27,11 +29,12 @@ func MouseState() (x, y int32, isDown bool) {
 	return
 }
 
-var mouseObserverList []mouseObserver
-
-func AddMouseObserver(m mouseObserver) {
+// AddMouseObserver causes m to be notified of mouse events.
+func AddMouseObserver(m MouseObserver) {
 	mouseObserverList = append(mouseObserverList, m)
 }
+
+var mouseObserverList []MouseObserver
 
 func forwardMouseEvent(event MouseEvent, x, y int32) {
 	mouseX = x

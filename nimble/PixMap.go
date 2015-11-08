@@ -12,7 +12,11 @@ type PixMap struct {
 	height  int32   // height of array in pixels
 }
 
-// MakePixMap makes a PixMap using provided buffer.
+// MakePixMap makes a PixMap referring to pixels in the given slice.
+// The following identities describe the mapping:
+//     pixels[0] maps to (0,0).
+//     pixels[1] maps to (1,0).
+//     pixels[vstride] to (0,1).
 func MakePixMap(width, height int32, pixels []Pixel, vstride int32) (pm PixMap) {
 	if devConfig {
 		// limit is a sanity check limit.  Though a PixMap could conceivably be bigger, it's more likely a sign of a programmer error.
@@ -79,14 +83,14 @@ func (pm *PixMap) Row(y int32) []Pixel {
 	return pm.buf[i : i+pm.width]
 }
 
-// Pixel returns the pixel at (x,y)
+// Pixel returns value of pixel at (x,y)
 func (pm *PixMap) Pixel(x int32, y int32) Pixel {
 	return pm.buf[pm.index(x, y)]
 }
 
-// Set pixel at (x,y).
-func (pm *PixMap) SetPixel(x, y int32, p Pixel) {
-	pm.buf[pm.index(x, y)] = p
+// Set pixel at (x,y) to given color.
+func (pm *PixMap) SetPixel(x, y int32, color Pixel) {
+	pm.buf[pm.index(x, y)] = color
 }
 
 // DrawRect draws a rectangle with the given color.
@@ -139,11 +143,11 @@ func min(a, b int32) int32 {
 }
 
 // Draw rectangle [x0,y0) x [x1,y1)
-func (dst *PixMap) rawDrawRect(x0, y0, x1, y1 int32, p Pixel) {
+func (dst *PixMap) rawDrawRect(x0, y0, x1, y1 int32, color Pixel) {
 	for y := y0; y < y1; y++ {
 		d := dst.Row(y)[x0:x1]
 		for j := range d {
-			d[j] = p
+			d[j] = color
 		}
 	}
 }

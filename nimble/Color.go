@@ -1,5 +1,7 @@
 package nimble
 
+// A pixel value.  Currently the format is ARGB, but this might change in the future.
+// Use the Pixel constructing functions RGB and Gray to construct pixels.
 type Pixel uint32
 
 // Field positions for ARGB format.
@@ -30,5 +32,8 @@ func Gray(frac float32) Pixel {
 	return g<<redShift | g<<greenShift | g<<blueShift | 0xFF<<alphaShift
 }
 
-const Black = Pixel(0xFF000000)
-const White = Pixel(0xFFFFFFFF)
+// Predefined pixel constants.
+const (
+	Black = Pixel(0xFF000000)
+	White = Pixel(0xFFFFFFFF)
+)

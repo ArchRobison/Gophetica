@@ -198,12 +198,12 @@ func Run(win WindowSpec) int {
 	}
 }
 
-// Causes Run() to return after processing any pending events.
+// Quit causes Run() to return after processing any pending events.
 func Quit() {
 	sdl.PushEvent(&sdl.QuitEvent{Type: sdl.QUIT})
 }
 
-// Show or hide cursor
+// ShowCursor causes the cursor to be shown or hidden.
 func ShowCursor(show bool) {
 	if show {
 		sdl.ShowCursor(1)
@@ -212,8 +212,10 @@ func ShowCursor(show bool) {
 	}
 }
 
+// A Font
 type Font ttf.Font
 
+// OpenFont opens creates a font object and returns a pointer to it.
 func OpenFont(filename string, size int) (*Font, error) {
 	if !ttf.WasInit() {
 		ttf.Init()
@@ -222,10 +224,13 @@ func OpenFont(filename string, size int) (*Font, error) {
 	return (*Font)(f), err
 }
 
-func (f *Font) Close() {
+// Close frees resources used by the given Font object.
+func (f Font) Close() {
 	f.Close()
 }
 
+// DrawText draws the given text at (x,y) on pm, in the given color and font.
+// The return value indicates the width and height of a bounding box for the text.
 func (pm *PixMap) DrawText(x, y int32, text string, color Pixel, font *Font) (width, height int32) {
 	if text == "" {
 		return 0, font.Height()
@@ -258,10 +263,12 @@ func (pm *PixMap) DrawText(x, y int32, text string, color Pixel, font *Font) (wi
 	return
 }
 
+// Height returns the nominal height of the font.
 func (f *Font) Height() int32 {
 	return int32((*ttf.Font)(f).Height())
 }
 
+// Size returns the width and height of a bounding box for the text.
 func (f *Font) Size(text string) (width, height int32) {
 	w, h, err := (*ttf.Font)(f).SizeUTF8(text)
 	if err != nil {
