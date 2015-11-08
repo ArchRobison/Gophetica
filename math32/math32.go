@@ -1,4 +1,4 @@
-// Package math32 implements math functions on float32
+// Package math32 implements math functions on float32.
 package math32
 
 import (
