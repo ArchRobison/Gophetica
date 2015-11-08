@@ -1,4 +1,3 @@
-// Package math32 implements math functions on float32
 package math32
 
 func Trunc(x float32) float32
