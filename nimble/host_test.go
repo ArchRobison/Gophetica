@@ -14,6 +14,7 @@ func (*context) Init(width, height int32) {
 var font *Font
 
 func (*context) Render(pm PixMap) {
+	pm.Fill(0xFF0000) // Red
 	pm.Fill(Black)
 	pm.DrawRect(Rect{Left: observedMouseX, Top: 0, Right: observedMouseX + 1, Bottom: pm.Height()}, crossColor)
 	pm.DrawRect(Rect{Left: 0, Top: observedMouseY, Right: pm.Width(), Bottom: observedMouseY + 1}, crossColor)

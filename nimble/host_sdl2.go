@@ -14,8 +14,11 @@ import (
 	"os"
 	"reflect"
 	"runtime"
+	"time"
 	"unsafe"
 )
+
+var isMacOS = runtime.GOOS == "darwin"
 
 var keyMap = map[sdl.Keycode]Key{
 	sdl.K_RETURN:    KeyReturn,
@@ -112,8 +115,23 @@ func Run(win WindowSpec) int {
 			int(winWidth), int(winHeight), sdl.WINDOW_SHOWN)
 	} else {
 		// Full screen
-		window, err = sdl.CreateWindow("", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
-			0, 0, sdl.WINDOW_SHOWN|sdl.WINDOW_FULLSCREEN_DESKTOP)
+		if isMacOS {
+			// Contrary to https://wiki.libsdl.org/SDL_CreateWindow, on MacOS 10.11.1
+			// a call to sdl.CreateWindow in fullscreen mode *does* use the w and h parameters.
+			// So ask what the display size is.
+			var mode sdl.DisplayMode
+			err = sdl.GetDesktopDisplayMode(0, &mode)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Cannot get desktop display mode")
+				panic(err)
+			}
+			window, err = sdl.CreateWindow("", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
+				int(mode.W), int(mode.H), sdl.WINDOW_SHOWN|sdl.WINDOW_FULLSCREEN_DESKTOP)
+		} else {
+			window, err = sdl.CreateWindow("", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
+				0, 0, sdl.WINDOW_SHOWN|sdl.WINDOW_FULLSCREEN_DESKTOP)
+		}
+
 	}
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to create window: %v\n", err)
@@ -176,7 +194,10 @@ func Run(win WindowSpec) int {
 				}
 			}
 		}
-
+		// MacOS appears to have video bug.  Work around it with artificial delay.
+		if isMacOS {
+			time.Sleep(time.Millisecond)
+		}
 		pixels, pitch := lockTexture(tex, width, height)
 		pm := MakePixMap(int32(width), int32(height), pixels, int32(pitch))
 		for _, r := range renderClientList {
