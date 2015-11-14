@@ -14,7 +14,6 @@ import (
 	"os"
 	"reflect"
 	"runtime"
-	"time"
 	"unsafe"
 )
 
@@ -148,20 +147,27 @@ func Run(win WindowSpec) int {
 	}
 	defer renderer.Destroy()
 
-	// Create texture
-	tex, err := renderer.CreateTexture(sdl.PIXELFORMAT_ARGB8888, sdl.TEXTUREACCESS_STREAMING, width, height)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "renderer.CreateTexture: %v\n", err)
-		panic(err)
+	var nTex = 1
+	if isMacOS {
+		// Work around MacOS bug via double buffering
+		nTex = 2
 	}
-	defer tex.Destroy()
-
+	// Create texture
+	tex := make([]*sdl.Texture, nTex)
+	for i := range tex {
+		tex[i], err = renderer.CreateTexture(sdl.PIXELFORMAT_ARGB8888, sdl.TEXTUREACCESS_STREAMING, width, height)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "renderer.CreateTexture: %v\n", err)
+			panic(err)
+		}
+		defer tex[i].Destroy()
+	}
 	for _, r := range renderClientList {
 		r.Init(int32(width), int32(height))
 	}
 
 	// Loop until quit
-	for {
+	for i := 0; ; i ^= nTex - 1 {
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 			switch e := event.(type) {
 			case *sdl.QuitEvent:
@@ -194,23 +200,19 @@ func Run(win WindowSpec) int {
 				}
 			}
 		}
-		// MacOS appears to have video bug.  Work around it with artificial delay.
-		if isMacOS {
-			time.Sleep(time.Millisecond)
-		}
-		pixels, pitch := lockTexture(tex, width, height)
+		pixels, pitch := lockTexture(tex[i], width, height)
 		pm := MakePixMap(int32(width), int32(height), pixels, int32(pitch))
 		for _, r := range renderClientList {
 			r.Render(pm)
 		}
-		tex.Unlock()
+		tex[i].Unlock()
 
 		err := renderer.Clear()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "renderer.Clear: %v", err)
 			panic(err)
 		}
-		renderer.Copy(tex, nil, nil)
+		renderer.Copy(tex[i], nil, nil)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "renderer.Copy: %v", err)
 			panic(err)
