@@ -1,7 +1,5 @@
-// +build !darwin
+// +build !bundle
 
 package nimble 
 
-func ResourceDir() string {
-    return "files"
-}
+const resourceDir = "./"

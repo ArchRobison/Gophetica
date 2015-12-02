@@ -243,7 +243,7 @@ func OpenFont(filename string, size int) (*Font, error) {
 	if !ttf.WasInit() {
 		ttf.Init()
 	}
-	f, err := ttf.OpenFont(filename, size)
+	f, err := ttf.OpenFont(resourceDir + filename, size)
 	return (*Font)(f), err
 }
 

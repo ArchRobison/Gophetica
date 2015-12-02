@@ -1,4 +1,4 @@
-// +build darwin
+// +build bundle,darwin
 
 package nimble 
 
@@ -7,10 +7,12 @@ import "C"
 
 import "path"
 
-func ResourceDir() string {
+var resourceDir string
+
+func init() {
     bufSize := C.uint32_t(0)
     C._NSGetExecutablePath(nil,&bufSize)
     buf := make([]C.char, bufSize)
     C._NSGetExecutablePath(&buf[0],&bufSize)
-    return path.Dir(C.GoString(&buf[0]))+"/../Resources"
+    resourceDir = path.Dir(C.GoString(&buf[0]))+"/../Resources/"
 }
