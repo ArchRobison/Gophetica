@@ -1,5 +1,6 @@
 // +build !bundle
 
-package nimble 
+package nimble
 
 const resourceDir = "./"
+const recordDir = "./"

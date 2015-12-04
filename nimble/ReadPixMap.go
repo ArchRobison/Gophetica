@@ -14,7 +14,8 @@ func component16(c uint32) Pixel {
 
 // ReadPixMap reads a PixMap from a file with the given name.
 func ReadPixMap(filename string) (pm PixMap, err error) {
-	f, err := os.Open(resourceDir + filename)
+	path := resourceDir + filename
+	f, err := os.Open(path)
 	if err != nil {
 		return
 	}

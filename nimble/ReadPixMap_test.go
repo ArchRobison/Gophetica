@@ -1,3 +1,5 @@
+// +build !bundle
+
 package nimble
 
 import (
