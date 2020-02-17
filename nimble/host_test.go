@@ -75,8 +75,8 @@ func TestMouse(t *testing.T) {
 	AddRenderClient(&context{})
 	AddKeyObserver(&context{})
 	AddMouseObserver(&context{})
-	fmt.Printf("Mouse mouse around and click left button. Press Esc to quit.\n")
+	fmt.Printf("Move mouse around and click left button.\nPress Esc to continue to full-screen test.\nPress Esc after that to exit\n")
 	var ctx winContext
-	Run(&ctx) // Partiel screen test
+	Run(&ctx) // Partial screen test
 	Run(nil)  // Full screen test
 }

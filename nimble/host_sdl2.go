@@ -10,7 +10,7 @@ import "C"
 import (
 	"fmt"
 	"github.com/veandco/go-sdl2/sdl"
-	"github.com/veandco/go-sdl2/sdl_ttf"
+	"github.com/veandco/go-sdl2/ttf"
 	"os"
 	"reflect"
 	"runtime"
@@ -37,24 +37,23 @@ func Now() float64 {
 }
 
 // Creates a slice of Pixel from a raw pointer
-func sliceFromPixelPtr(data unsafe.Pointer, length int) (pixels []Pixel) {
+func PixelSliceFromByteSlice(data []byte, length int32) (pixels []Pixel) {
 	sliceHeader := (*reflect.SliceHeader)(unsafe.Pointer(&pixels))
 	sliceHeader.Cap = int(length)
 	sliceHeader.Len = int(length)
-	sliceHeader.Data = uintptr(data)
+	sliceHeader.Data = uintptr(unsafe.Pointer(&data[0]))
 	return
 }
 
-func lockTexture(tex *sdl.Texture, width int, height int) (pixels []Pixel, pitch int) {
-	var data unsafe.Pointer
-	err := tex.Lock(nil, &data, &pitch)
+func lockTexture(tex *sdl.Texture, width int32, height int32) (pixels []Pixel, pitch int) {
+	data, pitch, err := tex.Lock(nil)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "tex.Lock: %v", err)
 		panic(err)
 	}
 	// Convert pitch units from byte to pixels
 	pitch /= 4
-	pixels = sliceFromPixelPtr(data, width*height)
+	pixels = PixelSliceFromByteSlice(data, width*height)
 	return
 }
 
@@ -101,7 +100,7 @@ func Run(win WindowSpec) int {
 		panic(err)
 	}
 	if audioDevice < 2 {
-		fmt.Fprintf(os.Stderr, "Audio device=%v < 2 contrary to SDL-2 documentation\n", audioDevice, err)
+		fmt.Fprintf(os.Stderr, "Audio device=%v < 2 contrary to SDL-2 documentation: %v\n", audioDevice, err)
 	}
 	sdl.PauseAudioDevice(audioDevice, false)
 
@@ -111,7 +110,7 @@ func Run(win WindowSpec) int {
 		// Partial screen
 		winWidth, winHeight := win.Size()
 		window, err = sdl.CreateWindow(win.Title(), sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
-			int(winWidth), int(winHeight), sdl.WINDOW_SHOWN)
+			winWidth, winHeight, sdl.WINDOW_SHOWN)
 	} else {
 		// Full screen
 		if isMacOS {
@@ -119,13 +118,13 @@ func Run(win WindowSpec) int {
 			// a call to sdl.CreateWindow in fullscreen mode *does* use the w and h parameters.
 			// So ask what the display size is.
 			var mode sdl.DisplayMode
-			err = sdl.GetDesktopDisplayMode(0, &mode)
+			mode, err = sdl.GetDesktopDisplayMode(0)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Cannot get desktop display mode")
 				panic(err)
 			}
 			window, err = sdl.CreateWindow("", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
-				int(mode.W), int(mode.H), sdl.WINDOW_SHOWN|sdl.WINDOW_FULLSCREEN_DESKTOP)
+				mode.W, mode.H, sdl.WINDOW_SHOWN|sdl.WINDOW_FULLSCREEN_DESKTOP)
 		} else {
 			window, err = sdl.CreateWindow("", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
 				0, 0, sdl.WINDOW_SHOWN|sdl.WINDOW_FULLSCREEN_DESKTOP)
@@ -186,17 +185,19 @@ func Run(win WindowSpec) int {
 				case sdl.MOUSEBUTTONUP:
 					forwardMouseEvent(MouseUp, int32(e.X), int32(e.Y))
 				}
-			case *sdl.KeyDownEvent:
-				var k Key
-				if 0x20 <= e.Keysym.Sym && e.Keysym.Sym < 0x7F {
-					// Printable ASCII
-					k = Key(e.Keysym.Sym)
-				} else {
-					// Try special character table
-					k = keyMap[e.Keysym.Sym]
-				}
-				if k != 0 {
-					forwardKeyEvent(k)
+			case *sdl.KeyboardEvent:
+				if e.Type == sdl.KEYDOWN {
+					var k Key
+					if 0x20 <= e.Keysym.Sym && e.Keysym.Sym < 0x7F {
+						// Printable ASCII
+						k = Key(e.Keysym.Sym)
+					} else {
+						// Try special character table
+						k = keyMap[e.Keysym.Sym]
+					}
+					if k != 0 {
+						forwardKeyEvent(k)
+					}
 				}
 			}
 		}
@@ -262,7 +263,7 @@ func (pm *PixMap) DrawText(x, y int32, text string, color Pixel, font *Font) (wi
 		G: uint8(color >> greenShift),
 		B: uint8(color >> blueShift),
 		A: uint8(color >> alphaShift)}
-	tmp, err := (*ttf.Font)(font).RenderUTF8_Solid(text, c)
+	tmp, err := (*ttf.Font)(font).RenderUTF8Solid(text, c)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "RenderUTF8_Solid: %v", err)
 		panic(err)
@@ -271,7 +272,7 @@ func (pm *PixMap) DrawText(x, y int32, text string, color Pixel, font *Font) (wi
 	width, height = tmp.W, tmp.H
 	sliceHeader := (*reflect.SliceHeader)(unsafe.Pointer(&pm.buf))
 	dst, err := sdl.CreateRGBSurfaceFrom(unsafe.Pointer(sliceHeader.Data),
-		int(pm.width), int(pm.height), 32, int(pm.vstride*4),
+		pm.width, pm.height, 32, int(pm.vstride*4),
 		0xFF<<redShift, 0xFF<<greenShift, 0xFF<<blueShift, 0xFF<<alphaShift)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "CreateRGBSurfaceFrom: %v", err)
